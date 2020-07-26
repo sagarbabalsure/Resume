@@ -1,0 +1,597 @@
+% vim: set textwidth=120:
+
+% Example CV based on the 1.5-column-cv template. Main features:
+% * uses the Roboto font family and IcoMoon icon set;
+% * doesn't use colours, different font weights are used instead for styling;
+% * because the CV fits on one page, header and footer is empty, since there isn't much useful info to put there;
+% * includes a photo.
+\documentclass[a4paper,10pt]{article}
+
+
+% package imports
+% ---------------
+
+\usepackage[british]{babel} % for correct language and hyphenation and stuff
+\usepackage{calc}           % for easier length calculations (infix notation)
+\usepackage{enumitem}       % for configuring list environments
+\usepackage{fancyhdr}       % for setting header and footer
+\usepackage{fontspec}       % for fonts
+\usepackage{geometry}       % for setting margins (\newgeometry)
+\usepackage{graphicx}       % for pictures
+\usepackage{microtype}      % for microtypography stuff
+\usepackage{xcolor}         % for colours
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=black,
+}
+
+
+% margin and column widths
+% ------------------------
+
+% margins
+\newgeometry{left=15mm,right=15mm,top=15mm,bottom=15mm}
+
+% width of the gap between left and right column
+\newlength{\cvcolumngapwidth}
+\setlength{\cvcolumngapwidth}{3.5mm}
+
+% left column width
+\newlength{\cvleftcolumnwidth}
+\setlength{\cvleftcolumnwidth}{44.5mm}
+
+% right column width
+\newlength{\cvrightcolumnwidth}
+\setlength{\cvrightcolumnwidth}{\textwidth-\cvleftcolumnwidth-\cvcolumngapwidth}
+
+% set paragraph indentation to 0, because it screws up the whole layout otherwise
+\setlength{\parindent}{0mm}
+
+
+% style definitions
+% -----------------
+% style categories explanation:
+% * \cvnameXXX is used for the name;
+% * \cvsectionXXX is used for section names (left column, accompanied by a horizontal rule);
+% * \cvtitleXXX is used for job/education titles (right column);
+% * \cvdurationXXX is used for job/education durations (left column);
+% * \cvheadingXXX is used for headings (left column);
+% * \cvmainXXX (and \setmainfont) is used for main text;
+% * \cvruleXXX is used for the horizontal rules denoting sections.
+
+% font families
+\defaultfontfeatures{Ligatures=TeX} % reportedly a good idea, see https://tex.stackexchange.com/a/37251
+
+\newfontfamily{\cvnamefont}{Roboto Medium}
+\newfontfamily{\cvsectionfont}{Roboto Medium}
+\newfontfamily{\cvtitlefont}{Roboto Regular}
+\newfontfamily{\cvdurationfont}{Roboto Light Italic}
+\newfontfamily{\cvheadingfont}{Roboto Regular}
+\setmainfont{Roboto Light}
+
+% colours
+\definecolor{cvnamecolor}{HTML}{000000}
+\definecolor{cvsectioncolor}{HTML}{000000}
+\definecolor{cvtitlecolor}{HTML}{000000}
+\definecolor{cvdurationcolor}{HTML}{000000}
+\definecolor{cvheadingcolor}{HTML}{000000}
+\definecolor{cvmaincolor}{HTML}{000000}
+\definecolor{cvrulecolor}{HTML}{000000}
+
+\color{cvmaincolor}
+
+% styles
+\newcommand{\cvnamestyle}[1]{{\Large\cvnamefont\textcolor{cvnamecolor}{#1}}}
+\newcommand{\cvsectionstyle}[1]{{\normalsize\cvsectionfont\textcolor{cvsectioncolor}{#1}}}
+\newcommand{\cvtitlestyle}[1]{{\large\cvtitlefont\textcolor{cvtitlecolor}{#1}}}
+\newcommand{\cvdurationstyle}[1]{{\small\cvdurationfont\textcolor{cvdurationcolor}{#1}}}
+\newcommand{\cvheadingstyle}[1]{{\normalsize\cvheadingfont\textcolor{cvheadingcolor}{#1}}}
+
+
+% inter-item spacing
+% ------------------
+
+% vertical space after personal info and standard CV items
+\newlength{\cvafteritemskipamount}
+\setlength{\cvafteritemskipamount}{5mm plus 1.25mm minus 1.25mm}
+
+% vertical space after sections
+\newlength{\cvaftersectionskipamount}
+\setlength{\cvaftersectionskipamount}{2mm plus 0.5mm minus 0.5mm}
+
+% extra vertical space to be used when a section starts with an item with a heading (e.g. in the skills section),
+% so that the heading does not follow the section name too closely
+\newlength{\cvbetweensectionandheadingextraskipamount}
+\setlength{\cvbetweensectionandheadingextraskipamount}{1mm plus 0.25mm minus 0.25mm}
+
+
+% intra-item spacing
+% ------------------
+
+% vertical space after name
+\newlength{\cvafternameskipamount}
+\setlength{\cvafternameskipamount}{3mm plus 0.75mm minus 0.75mm}
+
+% vertical space after personal info lines
+\newlength{\cvafterpersonalinfolineskipamount}
+\setlength{\cvafterpersonalinfolineskipamount}{2mm plus 0.5mm minus 0.5mm}
+
+% vertical space after titles
+\newlength{\cvaftertitleskipamount}
+\setlength{\cvaftertitleskipamount}{1mm plus 0.25mm minus 0.25mm}
+
+% value to be used as parskip in right column of CV items and itemsep in lists (same for both, for consistency)
+\newlength{\cvparskip}
+\setlength{\cvparskip}{0.5mm plus 0.125mm minus 0.125mm}
+
+% set global list configuration (use parskip as itemsep, and no separation otherwise)
+\setlist{parsep=0mm,topsep=0mm,partopsep=0mm,itemsep=\cvparskip}
+
+
+% CV commands
+% -----------
+
+% creates a "personal info" CV item with the given left and right column contents, with appropriate vertical space after
+% @param #1 left column content (should be the CV photo)
+% @param #2 right column content (should be the name and personal info)
+\newcommand{\cvpersonalinfo}[2]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \vspace{0mm} % XXX hack to align to top, see https://tex.stackexchange.com/a/11632
+        \raggedleft #1
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \vspace{0mm} % XXX hack to align to top, see https://tex.stackexchange.com/a/11632
+        #2
+    \end{minipage}
+
+    % space after
+    \vspace{\cvafteritemskipamount}
+}
+
+% typesets a name, with appropriate vertical space after
+% @param #1 name text
+\newcommand{\cvname}[1]{
+    % name
+    \cvnamestyle{#1}
+
+    % space after
+    \vspace{\cvafternameskipamount}
+}
+
+% typesets a line of personal info beginning with an icon, with appropriate vertical space after
+% @param #1 parameters for the \includegraphics command used to include the icon
+% @param #2 icon filename
+% @param #3 line text
+\newcommand{\cvpersonalinfolinewithicon}[3]{
+    % icon, vertically aligned with text (see https://tex.stackexchange.com/a/129463)
+    \raisebox{.5\fontcharht\font`E-.5\height}{\includegraphics[#1]{#2}}
+    % text
+    #3
+
+    % space after
+    \vspace{\cvafterpersonalinfolineskipamount}
+}
+
+% creates a "section" CV item with the given left column content, a horizontal rule in the right column, and with
+% appropriate vertical space after
+% @param #1 left column content (should be the section name)
+\newcommand{\cvsection}[1]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \raggedleft\cvsectionstyle{#1}
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \textcolor{cvrulecolor}{\rule{\cvrightcolumnwidth}{0.3mm}}
+    \end{minipage}
+
+    % space after
+    \vspace{\cvaftersectionskipamount}
+}
+
+% creates a standard, multi-purpose CV item with the given left and right column contents, parskip set to cvparskip
+% in the right column, and with appropriate vertical space after
+% @param #1 left column content
+% @param #2 right column content
+\newcommand{\cvitem}[2]{
+    % left and right column
+    \begin{minipage}[t]{\cvleftcolumnwidth}
+        \raggedleft #1
+    \end{minipage}% XXX necessary comment to avoid unwanted space
+    \hspace{\cvcolumngapwidth}% XXX necessary comment to avoid unwanted space
+    \begin{minipage}[t]{\cvrightcolumnwidth}
+        \setlength{\parskip}{\cvparskip} #2
+    \end{minipage}
+
+    % space after
+    \vspace{\cvafteritemskipamount}
+}
+
+% typesets a title, with appropriate vertical space after
+% @param #1 title text
+\newcommand{\cvtitle}[1]{
+    % title
+    \cvtitlestyle{#1}
+
+    % space after
+    \vspace{\cvaftertitleskipamount}
+    % XXX need to subtract cvparskip here, because it is automatically inserted after the title "paragraph"
+    \vspace{-\cvparskip}
+}
+
+
+% header and footer
+% -----------------
+
+% set empty header and footer
+\pagestyle{empty}
+
+
+
+% preamble end/document start
+% ===========================
+
+\begin{document}
+
+
+% personal info
+% -------------
+
+\cvpersonalinfo{
+    % photo
+    \includegraphics[height=36mm]{photo.png}
+}{
+    % name
+    \cvname{Vidhyasagar Babalsure}
+
+    % address
+    \cvpersonalinfolinewithicon{height=4mm}{072-location.pdf}{
+        Dighi, Pune 411015 
+    }
+
+    % phone number
+    \cvpersonalinfolinewithicon{height=4mm}{067-phone.pdf}{
+        +917709510027
+    }
+
+    % email address
+    \cvpersonalinfolinewithicon{height=4mm}{070-envelop.pdf}{
+        \href{mailto:sagarbabalsure@gmail.com}{sagarbabalsure@gmail.com}
+    }
+
+    % LinkedIn account
+    \cvpersonalinfolinewithicon{height=4mm}{458-linkedin.pdf}{
+       \textit{\href{https://www.linkedin.com/in/vidhyasagar-babalsure-5277b8185/}{vidhyasagar-babalsure-5277b8185}}
+        
+    }
+    
+    % Github  account
+    \cvpersonalinfolinewithicon{height=4mm}{github.pdf}{
+        \textit{\href{https://github.com/sagarbabalsure}{sagarbabalsure}}
+    }
+
+    % date of birth
+    DOB 12 Feb 2000
+}
+
+
+% work experience
+% ---------------
+
+\cvsection{PROJECTS}
+
+% Fake Company 2
+\cvitem{
+    \cvdurationstyle{July 2020 -- present}
+}{
+    \cvtitle{Expense Tracker}
+
+    Daily expense tracker 
+
+    \begin{itemize}[leftmargin=*]
+        \item The Purpose of this application is to track our daily expenses hassle-free.
+        \item This web application is using Django 3 as backend, HTML, CSS, JS as front-end and PostgreSQL as a database.
+        \item PROJECT LINK: 
+         \textit{\href{https://github.com/sagarbabalsure/ExpenseTracker}{github.com/sagarbabalsure/ExpenseTracker}}
+    \end{itemize}
+ }
+
+% Fake Company 1
+\cvitem{
+    \cvdurationstyle{March 2020 -- April 2020}
+}{
+    \cvtitle{Youtube downloader}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item This is a simple command-line interface for downloading videos and audios from youtube. I have implemented it using Python3.6. For downloading just paste the youtube link and select resolution.
+         \item PROJECT LINK: \textit{\href{https://github.com/sagarbabalsure/Youtube_downloader}{github.com/sagarbabalsure/Youtube\_downloader}}
+    \end{itemize}
+}
+
+% Fake Company 1
+\cvitem{
+    \cvdurationstyle{Dec 2019 -- Jan 2020}
+}{
+    \cvtitle{Live Cricket Score}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item Scraped the live cricket score from crickbuzz website. Terminal based app using Python3(beautifulsoup4, requests, html5lib).
+         \item PROJECT LINK: \textit{\href{https://github.com/sagarbabalsure/Live-Cricket}{github.com/sagarbabalsure/Live-Cricket}}
+    \end{itemize}
+}
+
+% Fake Company 1
+\cvitem{
+    \cvdurationstyle{Jul 2019 -- Sep 2019}
+}{
+    \cvtitle{Medicart}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item Flask based web application provides an online platform for buying and selling medicines.
+        \item Front-end is implemented using HTML, CSS, JS and sqlalchemy used for handling databases.
+         \item PROJECT LINK: \textit{\href{https://github.com/sagarbabalsure/Medicart}{github.com/sagarbabalsure/Medicart}}
+    \end{itemize}
+}
+
+% Fake Company 1
+\cvitem{
+    \cvdurationstyle{Dec 2018 -- Mar 2019}
+}{
+    \cvtitle{Tour Management System}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item Terminal based Online Tour and Traveling Booking is a system that gives customers the facility of booking Tours from available packages. Implemented in C++ using OOP concepts. 
+    \end{itemize}
+}
+
+% Fake Company 1
+\cvitem{
+    \cvdurationstyle{Jul 2018 -- Sep 2018}
+}{
+    \cvtitle{Stationary Distribution System}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item This system helps shopkeepers to keep track of products and this software enables users to create or add a new item in the stationary list.
+         \item Implemented in C language using various data structures.
+         \item PROJECT LINK: 
+         \textit{\href{https://github.com/sagarbabalsure/StationaryDistributionSystem}{github.com/sagarbabalsure/StationaryDistributionSystem}}
+    \end{itemize}
+}
+
+
+% education
+% ---------
+
+\cvsection{EDUCATION}
+
+% master's
+\cvitem{
+    \cvdurationstyle{2017 -- present}
+}{
+    \cvtitle{Bachelor of Technology}
+
+    G.H. Raisoni College of Engineering and Management, Pune.
+
+    \begin{itemize}[leftmargin=*]
+        \item CGPA - \textbf{9.52/10}
+        \item Year of completion - 2021
+    \end{itemize}
+}
+
+% bachelor's
+\cvitem{
+    \cvdurationstyle{2016 -- 2017}
+}{
+    \cvtitle{HSC}
+
+   Modern College of Arts, Science and Commerce Shivajinagar, Pune-411005
+
+    \begin{itemize}[leftmargin=*]
+        \item Percentage - \textbf{79.08\%}
+    \end{itemize}
+}
+\bigskip
+
+% skills
+% ------
+
+\cvsection{SKILLS}
+
+\vspace{\cvbetweensectionandheadingextraskipamount}
+
+% languages
+\cvitem{
+    \cvheadingstyle{Languages}
+}{
+    \item Python, C++, Java, C
+    % Fake language -- fake proficiency description
+    % \begin{itemize}
+    %     \item fake certificate description
+    % \end{itemize}
+}
+
+
+\cvitem{
+    \cvheadingstyle{Web Development}
+}{
+    \item Front End -- HTML, CSS, JAVASCRIPT, Jquery
+    \item Back End  -- Flask, Django
+    \item Database  -- MySQL, SQLite, MongoDB 
+    % Fake language -- fake proficiency description
+    % \begin{itemize}
+    %     \item fake certificate description
+    % \end{itemize}
+}
+
+\cvitem{
+    \cvheadingstyle{Tools}
+}{
+    \item Git, Github, Jupyter
+}
+\cvitem{
+    \cvheadingstyle{Other}
+}{
+    \item Data structures and Algorithms, Machine Learning
+}
+
+\cvsection{CERTIFICATIONS}
+
+\cvitem{
+    \cvdurationstyle{July 2020}
+}{
+    \cvtitle{Machine learning with python, Coursera}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item I have completed this course with \textbf{100.00\%} grades. Learned about regression, classification and clustering algorithms.
+        \item URL: 
+        \textit{\href{https://www.coursera.org/account/accomplishments/certificate/T4ZNVF93GQF8}{https://bit.ly/3f6kWQh}}
+    \end{itemize}
+}
+
+\cvitem{
+    \cvdurationstyle{April 2020}
+}{
+    \cvtitle{Python Data Structures, Coursera}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item I have completed this course with \textbf{100.00\%} grades. This course covers the data structures of
+         python programming.
+        \item URL:
+       \textit{\href{https://www.coursera.org/account/accomplishments/certificate/AKZ5LTN9JV5L}{https://bit.ly/3jB8U5b}}
+    \end{itemize}
+}
+
+
+\cvitem{
+    \cvdurationstyle{April 2020}
+}{
+    \cvtitle{Programming for Everybody, Coursera}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item I have completed this Coursera course with \textbf{98.30\%} grades.
+        \item URL:
+        \textit{\href{https://www.coursera.org/account/accomplishments/certificate/7APPEQDNGXJX}{https://bit.ly/3hDW8Ro}}
+        
+    \end{itemize}
+}
+
+
+\cvitem{
+    \cvdurationstyle{Oct 2019}
+}{
+    \cvtitle{Django, Udemy}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item I have completed Django ( python-based framework
+used for back end development ) course from Udemy.
+        \item URL:
+        \textit{\href{https://www.udemy.com/certificate/UC-IOQDAJNX/}{https://bit.ly/2WZP8GJ}}
+        
+    \end{itemize}
+}
+
+
+
+
+
+
+\cvitem{
+    \cvdurationstyle{Jan 2019 -- Mar 2019}
+}{
+    \cvtitle{Programming in C++, NPTEL}
+
+    % Fake Company 1, Fake City
+
+    \begin{itemize}[leftmargin=*]
+         \item I have completed 'PROGRAMMING IN C++' 8 weeks
+course on NPTEL with an \textbf{"ELITE"} medal.
+        \item URL:
+        \textit{\href{https://nptel.ac.in/noc/Ecertificate/?q=noc19-cs10/NPTEL19CS10S21740556191063293.jpg}{https://bit.ly/3332Dcm}}
+        
+    \end{itemize}
+}
+
+
+
+
+
+
+
+
+% additional info
+% ---------------
+
+\cvsection{EXTRA CURRICULUM ACTIVITIES}
+
+\vspace{\cvbetweensectionandheadingextraskipamount}
+
+\cvitem{
+    \cvheadingstyle{May 2020}
+}{
+    Attended online workshop on Basics of machine learning organised by CREATES, IIT Madras and a webinar on Artificial Intelligence organised by KVCH.
+}
+
+
+
+\cvitem{
+    \cvheadingstyle{Feb 2020 and Sep 2019}
+}{
+   Participated in different colleges competitions like CODEJUNKIE, CODEBUZZ
+}
+
+\cvitem{
+    \cvheadingstyle{OCT 2019}
+}{
+  Contributed to Hactoberfest-2019 and won goodies.
+}
+
+
+\cvitem{
+    \cvheadingstyle{Mar 2019}
+}{
+  Attended Blockchain Technology and Application conference organized by TRAI at Pune.
+}
+
+\cvitem{
+    \cvheadingstyle{Sep 2018}
+}{
+    Participated in college-level DEBATE COMPETITION which is organized under the ISTE student chapter and got 2nd prize.
+}
+
+\cvitem{
+    \cvheadingstyle{Mar 2018}
+}{
+    Presented the paper at ’RGI-National Level Technical/Research Paper Competition ’ on Face Detection and got the 1st prize.
+}
+
+\cvsection{PERSONAL DETAILS}
+
+\cvitem{
+    \cvheadingstyle{Languages}
+}{
+    \item English, Hindi, Marathi
+}
+
+\end{document}
